@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChargeWise AI</title>
+<style>
+  :root{
+    --deep:#02363D; --teal:#028090; --mint:#02C39A; --off:#F4FBFA;
+    --dark:#0B2B2E; --card:#FFFFFF; --border:#DCEDEA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI',Calibri,Arial,sans-serif;
+    background:var(--off); color:var(--dark);
+  }
+  header{
+    background:var(--deep); color:#fff; padding:22px 24px;
+  }
+  header h1{margin:0; font-size:26px;}
+  header p{margin:4px 0 0; color:#9FD8CF; font-size:14px;}
+
+  .layout{
+    display:flex; gap:20px; max-width:1100px; margin:24px auto; padding:0 16px;
+    flex-wrap:wrap;
+  }
+  .panel{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:18px; flex:1; min-width:300px;
+  }
+  .panel h2{font-size:16px; color:var(--teal); margin-top:0;}
+
+  /* Chat */
+  #chatWindow{
+    height:360px; overflow-y:auto; border:1px solid var(--border);
+    border-radius:10px; padding:12px; background:#FAFEFD; margin-bottom:12px;
+  }
+  .msg{margin:8px 0; padding:10px 14px; border-radius:10px; max-width:85%; line-height:1.4; font-size:14px;}
+  .msg.user{background:var(--teal); color:#fff; margin-left:auto; text-align:right;}
+  .msg.bot{background:#EAF6F4; color:var(--dark);}
+  .msg.bot b{color:var(--teal);}
+  #inputRow{display:flex; gap:8px;}
+  #userInput{
+    flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px;
+  }
+  #sendBtn{
+    background:var(--teal); color:#fff; border:none; padding:10px 18px;
+    border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;
+  }
+  #sendBtn:hover{background:var(--deep);}
+  .quick{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
+  }
+  .quick button{
+    background:#EAF6F4; border:1px solid var(--border); color:var(--teal);
+    padding:6px 10px; border-radius:16px; font-size:12px; cursor:pointer;
+  }
+  .quick button:hover{background:var(--mint); color:#fff; border-color:var(--mint);}
+
+  /* Calculator */
+  label{display:block; font-size:13px; margin:10px 0 4px; font-weight:600;}
+  input[type=number], select{
+    width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:14px;
+  }
+  #calcBtn{
+    margin-top:14px; background:var(--mint); color:#fff; border:none;
+    padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; width:100%;
+  }
+  #calcBtn:hover{background:var(--teal);}
+  #calcResult{
+    margin-top:14px; background:var(--deep); color:#fff; border-radius:10px; padding:14px;
+    display:none;
+  }
+  #calcResult .stat{font-size:26px; font-weight:700; color:var(--mint);}
+  #calcResult .label{font-size:12px; color:#CFEFEA;}
+  #calcResult .row{margin-bottom:10px;}
+
+  /* Stations */
+  table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+  th, td{padding:8px; text-align:left; border-bottom:1px solid var(--border);}
+  th{color:var(--teal); font-size:12px; text-transform:uppercase;}
+
+  footer{text-align:center; padding:20px; font-size:12px; color:#5B7A78;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ ChargeWise AI</h1>
+  <p>Your EV decision companion — charging stops, cost savings, and emissions insights</p>
+</header>
+
+<div class="layout">
+  <!-- CHAT PANEL -->
+  <div class="panel" style="flex:1.3;">
+    <h2>💬 Ask ChargeWise</h2>
+    <div id="chatWindow">
+      <div class="msg bot">Hi! I'm ChargeWise AI. Ask me about EV range, nearby charging stations, or ownership costs. Try one of the quick questions below to start.</div>
+    </div>
+    <div id="inputRow">
+      <input type="text" id="userInput" placeholder="e.g. Where can I charge near Pune?" />
+      <button id="sendBtn">Send</button>
+    </div>
+    <div class="quick">
+      <button onclick="ask('Where can I charge near Pune?')">Charging near Pune</button>
+      <button onclick="ask('How much can I save with an EV?')">EV savings</button>
+      <button onclick="ask('What is range anxiety?')">Range anxiety?</button>
+      <button onclick="ask('Which EV suits my daily commute?')">EV recommendation</button>
+    </div>
+  </div>
+
+  <!-- CALCULATOR PANEL -->
+  <div class="panel">
+    <h2>📊 Cost & Emissions Calculator</h2>
+    <label>Daily driving distance (km)</label>
+    <input type="number" id="dailyKm" value="30" min="1">
+    <label>Current vehicle type</label>
+    <select id="fuelType">
+      <option value="petrol">Petrol</option>
+      <option value="diesel">Diesel</option>
+    </select>
+    <button id="calcBtn" onclick="calculate()">Calculate Savings</button>
+    <div id="calcResult"></div>
+  </div>
+</div>
+
+<div class="layout" style="margin-top:0;">
+  <div class="panel">
+    <h2>🔌 Nearby Charging Stations (Demo Data)</h2>
+    <table>
+      <tr><th>Station</th><th>Location</th><th>Type</th><th>Distance</th></tr>
+      <tr><td>ChargeZone Hub</td><td>Baner, Pune</td><td>Fast DC</td><td>1.2 km</td></tr>
+      <tr><td>Tata Power EZ Charge</td><td>Kothrud, Pune</td><td>Fast DC</td><td>3.4 km</td></tr>
+      <tr><td>Statiq Point</td><td>Hinjewadi, Pune</td><td>AC Slow</td><td>5.8 km</td></tr>
+      <tr><td>Ather Grid</td><td>Viman Nagar, Pune</td><td>Fast DC</td><td>7.1 km</td></tr>
+    </table>
+    <p style="font-size:12px;color:#5B7A78;margin-top:10px;">Demo dataset for prototype purposes — replace with live map/API data in a future version.</p>
+  </div>
+</div>
+
+<footer>ChargeWise AI — SDG 13: Climate Action | Capstone Prototype by Amit</footer>
+
+<script>
+const chatBox = document.getElementById('chatWindow');
+const userInputEl = document.getElementById('userInput');
+
+function addMessage(text, sender){
+  const div = document.createElement('div');
+  div.className = 'msg ' + sender;
+  div.innerHTML = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Simple rule-based response engine (stands in for an AI/NLP API call)
+function getBotResponse(msg){
+  const m = msg.toLowerCase();
+
+  if(m.includes('charg') && (m.includes('near') || m.includes('pune') || m.includes('station'))){
+    return "I found <b>4 charging stations</b> near Pune — closest is <b>ChargeZone Hub, Baner (1.2 km, Fast DC)</b>. Full list is in the table below.";
+  }
+  if(m.includes('save') || m.includes('cost') || m.includes('saving')){
+    return "EV owners typically save <b>60–70% on running cost</b> vs petrol/diesel. Use the calculator on the right with your daily distance for an exact estimate.";
+  }
+  if(m.includes('range anxiety')){
+    return "<b>Range anxiety</b> is the fear of running out of battery before reaching a charging point. ChargeWise reduces this by showing verified nearby stations and realistic trip range before you leave.";
+  }
+  if(m.includes('recommend') || m.includes('which ev') || m.includes('suit')){
+    return "For a daily commute under 40 km, a compact EV with a 250–300 km range (e.g. Tata Tiago EV, MG Comet) comfortably covers a week of driving on 1–2 charges.";
+  }
+  if(m.includes('emission') || m.includes('co2')){
+    return "A petrol car emits roughly <b>120g CO2/km</b>. Switching to EV (on India's current grid mix) cuts this by around <b>40–50%</b>, more as renewable energy share grows.";
+  }
+  return "I can help with charging stations, cost savings, emissions, or EV recommendations — try asking about one of those, or tap a quick question below!";
+}
+
+function ask(text){
+  userInputEl.value = text;
+  sendMessage();
+}
+
+function sendMessage(){
+  const text = userInputEl.value.trim();
+  if(!text) return;
+  addMessage(text, 'user');
+  userInputEl.value = '';
+  setTimeout(() => {
+    addMessage(getBotResponse(text), 'bot');
+  }, 400);
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+userInputEl.addEventListener('keypress', function(e){
+  if(e.key === 'Enter') sendMessage();
+});
+
+// Cost & emissions calculator
+function calculate(){
+  const km = parseFloat(document.getElementById('dailyKm').value) || 0;
+  const fuelType = document.getElementById('fuelType').value;
+
+  const fuelPricePerL = fuelType === 'petrol' ? 105 : 92;   // INR/litre approx
+  const mileageKmPerL = fuelType === 'petrol' ? 15 : 18;
+  const co2PerKmFuel = fuelType === 'petrol' ? 120 : 132;   // g/km
+
+  const evUnitsPerKm = 0.15;      // kWh/km approx
+  const evPricePerUnit = 8;       // INR/kWh
+  const evCo2PerKm = 65;          // g/km (grid average)
+
+  const annualKm = km * 365;
+
+  const fuelCost = (annualKm / mileageKmPerL) * fuelPricePerL;
+  const evCost = annualKm * evUnitsPerKm * evPricePerUnit;
+  const savings = fuelCost - evCost;
+
+  const fuelCO2 = (annualKm * co2PerKmFuel) / 1000; // kg
+  const evCO2 = (annualKm * evCo2PerKm) / 1000; // kg
+  const co2Saved = fuelCO2 - evCO2;
+
+  const result = document.getElementById('calcResult');
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div class="row"><div class="stat">₹${Math.round(savings).toLocaleString()}</div><div class="label">Estimated annual fuel-cost savings</div></div>
+    <div class="row"><div class="stat">${Math.round(co2Saved)} kg</div><div class="label">CO2 emissions avoided per year</div></div>
+    <div class="label">Based on ${km} km/day, ${fuelType} vehicle vs. equivalent EV</div>
+  `;
+}
+</script>
+
+</body>
+</html>
